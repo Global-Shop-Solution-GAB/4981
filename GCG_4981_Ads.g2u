@@ -1,0 +1,45 @@
+Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+'BN, Mar 9, 2018
+'Project description is at the bottom
+F.Intrinsic.Control.Try
+v.Local..BulkDeclareString(sError)
+v.Local..BulkDeclareLong(iBIRunID,iRptID,iBILogID)
+v.Local.bExists.Declare
+
+f.ODBC.Connection!conx.OpenCompanyConnection(600)
+
+f.Intrinsic.UI.InvokeWaitDialog("Initialize...")
+F.ODBC.Connection!conx.TableExists("V_gcg_4981_Ads",v.Local.bExists)
+f.Intrinsic.Control.If(v.Local.bExists.Not)
+	f.ODBC.Connection!conx.Execute("Create view V_gcg_4981_Ads as (SELECT h1.ORDER_NO, h1.CUSTOMER, h1.USER_1, L1.RECORD_NO, L1.PART, L1.QTY_ORDERED, L1.PRICE, L1.EXTENSION, h1.DATE_ORDER FROM   v_Order_Header h1 LEFT OUTER JOIN v_Order_Lines L1 ON h1.ORDER_NO = L1.ORDER_NO Union  SELECT h2.ORDER_NO, h2.CUSTOMER, h2.USER_1, L2.Order_LINE, L2.PART, L2.QTY_ORDERED, L2.PRICE, L2.EXTENSION, h2.DATE_ORDER  FROM   v_Order_Hist_Head h2 LEFT OUTER JOIN v_Order_Hist_Line L2 ON h2.ORDER_NO = L2.ORDER_NO )")
+f.Intrinsic.Control.EndIf
+
+f.Intrinsic.UI.ChangeWaitStatus("Calling report...")
+F.Global.BI.GetRunID(v.Local.iBIRunID)
+f.Global.BI.GetIDFromName("GCG_4981_Ads.rpt",True,v.Local.iRptID)
+F.Global.BI.StartLogging(v.Local.iBIRunID,v.Local.iRptID,-1,"",v.Local.iBILogID)
+F.Global.BI.StopLogging(v.Local.iBILogID)
+f.Intrinsic.UI.CloseWaitDialog
+
+F.Global.BI.RunReportPreProcessor(v.Local.iBIRunID,v.Local.iBILogID,"","","",-1,True,"",-1,"",-1,"","",v.Local.iBIRunID)
+
+f.ODBC.Connection!conx.Close
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)	
+F.Intrinsic.Control.EndTry
+Program.Sub.Main.End
+
+Program.Sub.Comments.Start
+${$0$}$Employee Tardy Report$}$BAO$}$2/26/2018 12:18:38 PM$}$False
+${$3$}$0$}$$}$0$}$-1$}$$}$12:00:00 AM$}$
+
+'This project 4981 will create a custom report based on dates selected. 
+'User will select a date range and the program will run a report using User Field 1 in the Order Header. 
+'The report will group the data based on User Field 1 and display the part that was sold as well as the price.
+'The report will also total the sales amount based on the group.
+
+Program.Sub.Comments.End
